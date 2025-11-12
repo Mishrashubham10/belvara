@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 type Theme = 'light' | 'dark';
+
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
@@ -16,13 +17,17 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  // ✅ Lazy init with SSR-safe check
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('belvara-theme');
-    return (saved as Theme) || 'light';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('belvara-theme') as Theme | null;
+      if (saved) return saved;
+    }
+    return 'light';
   });
 
   useEffect(() => {
-    const root = window.document.documentElement;
+    const root = document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     localStorage.setItem('belvara-theme', theme);
